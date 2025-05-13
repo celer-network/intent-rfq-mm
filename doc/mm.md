@@ -30,9 +30,6 @@ This document describes the functions and operations of the market maker (MM), w
   - [Customize subcomponents](#customize-subcomponents)
   - [Customize order processing](#customize-order-processing)
   - [Customize request serving](#customize-request-serving)
-- [Support](#support)
-  - [Information](#information)
-  - [Debugging](#debugging)
 
 
 
@@ -250,14 +247,14 @@ The `.peti-rfq-mm` folder's structure will look like:
 1. Chain configuration
 
 Each chain is configured by a `multichain`.
-Take Goerli as an example. Before using, don't forget to update `chainId`, `name`, and fill up `gateway` and `rfq`.
+Take Arbitrum Sepolia as an example. Before using, don't forget to update `chainId`, `name`, and fill up `gateway` and `rfq`.
 RFQ contract address could be found at [Information](#information).
 
 ```
 [[multichain]]
 chainID = 5
-name = "Goerli"
-gateway = "<your-goerli-rpc>" # fill in your Goerli rpc provider url
+name = "Arbitrum Sepolia"
+gateway = "<your-rpc>" # fill in your Arbitrum Sepolia rpc provider url
 rfq = "<copy-addr-from-'Support->Contract address'>"
 blkdelay = 5 # how many blocks confirmations are required
 blkinterval = 15 # polling interval for querying tx's status
@@ -282,7 +279,7 @@ that is big enough. After the transaction is sent, debug it in [Tenderly](https:
 
 2. Liquidity configuration
 
-Liquidity is configured per chain and per token. An example full configuration of liquidity on Goerli is:
+Liquidity is configured per chain and per token. An example full configuration of liquidity on Arbitrum Sepolia is:
 ```
 [[lp]]
 chainid = 5
@@ -293,7 +290,7 @@ passphrase = "<password-of-your-keystore>"
 # release native token or wrapped native token on this chain, used when the token deposited by User is native token or wrapped native token
 releasenative = false
 [[lp.liqs]]
-address = "0xf4B2cbc3bA04c478F0dC824f4806aC39982Dce73"
+address = ""
 symbol = "USDT"
 # token's available amount. if not set, would query the current token balance during initialization
 amount = "5000000000"
@@ -310,9 +307,9 @@ symbol = "ETH"
 decimals = 18
 freezetime = 200
 ```
-You can use different account for each chain or just use one account for all chains. `keystore` should set to path of your
-keystore file relative to `.peti-rfq-mm` floder.
-If you're going to use a contract as a liquidity provider, let `keystore` be empty.
+You can use different account for each chain or just use one account for all chains. For a local account, fill `keystore` and `passphrase`. `keystore` should be set to path of your
+keystore file relative to `.peti-rfq-mm` floder. For an external account, read the following guide.
+>**EXTERNAL ACCOUNT GUIDE.** First of all, this is a feature of light-MM. Since default MM will send tx for itself, a `lp` with hot key is required. (*External accounts as `lp`s with one specific local account for sending txs is possible. Customize your own MM and welcome any PRs*.) To use an external account(e.g. a contract that holds tokens), let `keystore` and `passphrase` be empty and set `address` to the address of the external account. **Most importantly, somehow let this external account call [registerAllowedSigner](https://github.com/celer-network/sgn-v2-contracts/blob/9ce8ffe13389415a53e2c38838da1b99689d40f0/contracts/message/apps/RFQ.sol#L316) of RFQ contract on specific chain with the address of `requestsigner`.**
 
 For each token, `address`, `symbol`, `decimals` and `freezetime` are required, while `amount` and `approve` are optional.
 
@@ -419,9 +416,10 @@ later updates of default MM application.
 
 Get `rfqserver.url` at [Information](#information) and fill up your API key.
 
-As mentioned before, MM should be able to sign any data and verify own signatures. Within default MM application, one 
-of the accounts configured in `lp.toml` is used as request signer to sign price and quote response. The chosen account is
-identified by `requestsigner.chainid` of which value matches with `lp.chainid`.
+As mentioned before, MM should be able to sign any data and verify own signatures. Beside of that, MM should also be able to sign quote hash if it's light versioned. `requestsigner` is just the signer who is responsible for those tasks. To configure this signer, you'll have the following choices:
+- only set `requestsigner.chainid`. Then MM will use the specific `lp` in `lp.toml` as signer. Since it's a signer, this `lp` shouldn't be an external account(`lp.keystore` and `lp.passphrase` are unset).
+- only set `requestsigner.keystore` and `requestsigner.passphrase`. This is needed often when the MM is light versioned and `lp` is external account. 
+>**IMPORTANT.** If the MM is light versioned, this configured signer will be used to sign quote hash for transferring tokens on behalf of `lp`. So make sure that **!! all !!** `lp` whose address is different with address of the configured signer have allowed the signer to do so. To give allowance, let `lp` call [registerAllowedSigner](https://github.com/celer-network/sgn-v2-contracts/blob/9ce8ffe13389415a53e2c38838da1b99689d40f0/contracts/message/apps/RFQ.sol#L316) of RFQ contract on specific chain.
 
 ### Running
 
@@ -468,7 +466,7 @@ tail -f -n30 /var/log/peti-rfq-mm/app/<log-file-with-start-time>.log
 
 The difference between Light MM and Default MM:
 * Light MM will not actively send any request to RFQ server.
-* Light MM will serve more api request.
+* Light MM will serve more api request. One for signing quote hash, and one for providing supported tokens' info.
 * Light MM will not send any tx on chain by himself. Tx for `dstTransfer` and `srcRelease` will be sent by Relayer.
 * Light MM will not charge tx gas cost and message fee. It will charged by Peti protocol.
 
@@ -603,20 +601,3 @@ func (mm *YourMMApp) Serve(ops ...grpc.ServerOption) {
     grpcServer.Serve(listener)
 }
 ```
-
-## Support
-
-### Information
-
-#### Server
-RFQ Server URL: `cbridge-v2-test.celer.network:9094`
-
-#### Contract Address
-RFQ contract
-* Goerli: [0xfF3cf572D591391935EF45F379C6D83182Feff5C](https://goerli.etherscan.io/address/0xfF3cf572D591391935EF45F379C6D83182Feff5C)
-* BSC Testnet: [0xdc23f4F3dFA283eD56F84d40F5AdE69dF16ec32E](https://testnet.bscscan.com/address/0xdc23f4F3dFA283eD56F84d40F5AdE69dF16ec32E)
-
-Wrapped native contract
-* Goerli: [0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6](https://goerli.etherscan.io/address/0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6)
-
-### Debugging
