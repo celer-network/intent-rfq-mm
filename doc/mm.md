@@ -1,10 +1,11 @@
 # RFQ Market Maker (MM) docs
 
-## Overview 
+## Overview
 
-Request For Quote (RFQ) system is running on top of Celer Inter-Chain Message Framework ([Celer IM](https://im-docs.celer.network/developer/celer-im-overview)) to enable secure and efficient intra- or inter-chain token swaps.
+The **Request For Quote (RFQ)** system is built on top of the [**Celer Inter-Chain Message Framework (Celer IM)**](https://im-docs.celer.network/developer/celer-im-overview), enabling secure and efficient token swaps both within a single blockchain (intra-chain)** and **across multiple blockchains (inter-chain).
 
-This document describes the functions and operations of the market maker (MM), which is responsible for quoting and fulfilling orders for RFQ transactions.
+This document outlines the responsibilities and operational flow of the **Market Maker (MM)**, which provides quotes and fulfills orders for RFQ transactions.
+
 
 ## Outline
 
@@ -35,7 +36,7 @@ This document describes the functions and operations of the market maker (MM), w
 
 ## RFQ Basics
 
-A successful RFQ transaction consists of two main processes:
+A successful RFQ transaction consists of two main steps:
 
 1. User and MM reach a quote agreement through off-chain communications via an RFQ Server.
 2. User and MM execute the quote by swapping tokens through the RFQ contracts and Celer IM.
@@ -62,27 +63,26 @@ A successful RFQ transaction consists of two main processes:
 once after MM is ready.
 
 1. User requests quotation from RFQ Server for a possible swap: token X on chain A -> token Y on chain B
-2. RFQ Server got the request from User, and takes a look at all MMs' token config in order to determine who is available to 
-fulfill this swap. Then RFQ Server will send [Price request](./sdk.md#message-pricerequest) to all available MMs.
-3. MM got the price request from RFQ Server, and calculate how much token Y on chain B he would like to pay for exchanging
-token X on chain A, according to his fee strategy. Then MM will return his price response to RFQ Server along with his
-signature of this price response and a period for this price to be valid.
-4. RFQ Server collects price responses from available MMs and chooses only one MM for taking this swap order. **The MM of 
-which price response has the highest amount of token Y on chain B will be chosen by RFQ Server.** Then the best price response
-will be returned to User as the requested quotation of his possible swap.
-5. If User accepts this quotation, he needs to confirm it through RFQ Server.
-6. When User confirms the quotation, RFQ Server will send [Quote request](./sdk.md#message-quoterequest) to the chosen MM.
-Quote request includes the signature produced by the MM during step 3, a suggested SrcDeadline for User by which User should finish
-locking his token X on chain A, a suggested DstDeadline for MM by which MM should finish transferring token Y to User on chain B.
-7. MM got the quote request from RFQ Server and verify his signature of price. As long as the 
-   1. signature is valid,
-   2. the period for this price to be valid has not yet passed,
-   3. suggested SrcDeadline and DstDeadline are both acceptable,
-   4. (optional) has sufficient token Y on chain B and freezes it,
+2. RFQ Server receives the request and checks all MMs' token configs to determine who can fulfill the swap. It then sends a [PriceRequest](./sdk.md#message-pricerequest) to all available MMs.
+3. MM receives the PriceRequest and calculates how much token Y on chain B it is willing to pay for token X on chain A, based on its fee strategy. The MM returns a price response to the RFQ Server, including:
+  - the quoted amount,
+  - a signature of the response,
+  - a validity period for the price.
+4. RFQ Server collects responses and selects the MM offering the **highest amount of token Y on chain B**. The best price response is returned to the User as the quotation.
+5. If the User accepts the quotation, they confirm it through the RFQ Server.
+6. Upon confirmation, RFQ Server sends a [QuoteRequest](./sdk.md#message-quoterequest) to the selected MM. This request includes:
+  - the MM’s signed price response,
+  - a suggested `SrcDeadline` by which the User should lock token X on chain A,
+  - a suggested `DstDeadline` by which the MM should transfer token Y to the User on chain B.
+7. MM receives the QuoteRequest and verifies:
+  - the signature is valid,
+  - the price is still within its validity period,
+  - `SrcDeadline` and `DstDeadline` are acceptable,
+  - (optional) it has sufficient token Y and freezes it.
 
-    MM can sign this quotation and return this signature to RFQ Server for later verification. 
+    If all checks pass, MM signs the quotation and returns the signature to the RFQ Server for later verification.
 
-Once a good quote response is returned from an MM to RFQ Server, an agreement between certain User and MM is reached.
+Once a valid quote response is signed by the MM and returned, an agreement between the User and MM is established.
 
 ### Swap on chain
 #### SrcDeposit
@@ -105,7 +105,7 @@ Once a good quote response is returned from an MM to RFQ Server, an agreement be
                              ╚═══════════════════════════════════╝                   ╚════════════╝                                              
                                                                                       
 ```
-After User confirms a quotation, User is required to deposit token X to RFQ contract on chain A, by calling [srcDeposit](https://github.com/celer-network/sgn-v2-contracts/blob/c66326d458b9d34058ed960f610af69d8514716c/contracts/message/apps/RFQ.sol#L80).
+After User confirms a quotation, User is required to deposit token X to RFQ contract on chain A, by calling [srcDeposit](https://github.com/celer-network/intent-rfq-contract/blob/4b482dcff6b775002d726a33835a9258378c647a/src/RFQ.sol#L90).
 During `srcDeposit`, a message would be sent via Message Bus, the core contract of Celer IM. As a consequence, the message
 would be catched by SGN via event listener, and co-signed by SGN's validators. Once the message has sufficient voting power,
 RFQ Server can fetch it from SGN and mark the corresponding swap to status `OrderStatus.STATUS_SRC_DEPOSITED`. Then the chosen MM will 
@@ -140,7 +140,7 @@ When MM is informed that User has deposited, MM should
 * double-check the validity of information from RFQ Server in case of a hacked or malicious server, that User did have
 deposited token X on chain A. 
 
-If everything goes well, then MM can call [dstTransfer](https://github.com/celer-network/sgn-v2-contracts/blob/c66326d458b9d34058ed960f610af69d8514716c/contracts/message/apps/RFQ.sol#L136) to transfer token Y to User on chain B.
+If everything goes well, then MM can call [dstTransfer](https://github.com/celer-network/intent-rfq-contract/blob/4b482dcff6b775002d726a33835a9258378c647a/src/RFQ.sol#L145) to transfer token Y to User on chain B.
 During `dstTransfer`, 
 * a message would be sent via Message Bus contract, catched by SGN, and co-signed by SGN's validators.
 * certain amount of token Y would be transferred from MM, and transferred to User after the message is successfully sent out.
@@ -170,7 +170,7 @@ As a proof of order fulfillment generated by SGN is required to release token, R
  ──────────────────────────────────────────────┴───────────────────────────────────────────────────
                                                                         
 ```
-When MM got the proof of order fulfillment, MM can call [srcRelease](https://github.com/celer-network/sgn-v2-contracts/blob/c66326d458b9d34058ed960f610af69d8514716c/contracts/message/apps/RFQ.sol#L188) 
+When MM got the proof of order fulfillment, MM can call [srcRelease](https://github.com/celer-network/intent-rfq-contract/blob/4b482dcff6b775002d726a33835a9258378c647a/src/RFQ.sol#L222)
 to release token X on chain A. During `srcRelease`, the proof is verified via MessageBus contract. If all checks are passed,
 the locked token X which was deposited by User would be transferred to MM after deducting RFQ protocol fee. 
 
@@ -309,7 +309,7 @@ freezetime = 200
 ```
 You can use different account for each chain or just use one account for all chains. For a local account, fill `keystore` and `passphrase`. `keystore` should be set to path of your
 keystore file relative to `.intent-rfq-mm` floder. For an external account, read the following guide.
->**EXTERNAL ACCOUNT GUIDE.** First of all, this is a feature of light-MM. Since default MM will send tx for itself, a `lp` with hot key is required. (*External accounts as `lp`s with one specific local account for sending txs is possible. Customize your own MM and welcome any PRs*.) To use an external account(e.g. a contract that holds tokens), let `keystore` and `passphrase` be empty and set `address` to the address of the external account. **Most importantly, somehow let this external account call [registerAllowedSigner](https://github.com/celer-network/sgn-v2-contracts/blob/9ce8ffe13389415a53e2c38838da1b99689d40f0/contracts/message/apps/RFQ.sol#L316) of RFQ contract on specific chain with the address of `requestsigner`.**
+>**EXTERNAL ACCOUNT GUIDE.** First of all, this is a feature of light-MM. Since default MM will send tx for itself, a `lp` with hot key is required. (*External accounts as `lp`s with one specific local account for sending txs is possible. Customize your own MM and welcome any PRs*.) To use an external account(e.g. a contract that holds tokens), let `keystore` and `passphrase` be empty and set `address` to the address of the external account. **Most importantly, somehow let this external account call [registerAllowedSigner](https://github.com/celer-network/intent-rfq-contract/blob/4b482dcff6b775002d726a33835a9258378c647a/src/RFQ.sol#L319) of RFQ contract on specific chain with the address of `requestsigner`.**
 
 For each token, `address`, `symbol`, `decimals` and `freezetime` are required, while `amount` and `approve` are optional.
 
@@ -419,7 +419,7 @@ Get `rfqserver.url` at [Information](#information) and fill up your API key.
 As mentioned before, MM should be able to sign any data and verify own signatures. Beside of that, MM should also be able to sign quote hash if it's light versioned. `requestsigner` is just the signer who is responsible for those tasks. To configure this signer, you'll have the following choices:
 - only set `requestsigner.chainid`. Then MM will use the specific `lp` in `lp.toml` as signer. Since it's a signer, this `lp` shouldn't be an external account(`lp.keystore` and `lp.passphrase` are unset).
 - only set `requestsigner.keystore` and `requestsigner.passphrase`. This is needed often when the MM is light versioned and `lp` is external account. 
->**IMPORTANT.** If the MM is light versioned, this configured signer will be used to sign quote hash for transferring tokens on behalf of `lp`. So make sure that **!! all !!** `lp` whose address is different with address of the configured signer have allowed the signer to do so. To give allowance, let `lp` call [registerAllowedSigner](https://github.com/celer-network/sgn-v2-contracts/blob/9ce8ffe13389415a53e2c38838da1b99689d40f0/contracts/message/apps/RFQ.sol#L316) of RFQ contract on specific chain.
+>**IMPORTANT.** If the MM is light versioned, this configured signer will be used to sign quote hash for transferring tokens on behalf of `lp`. So make sure that **!! all !!** `lp` whose address is different with address of the configured signer have allowed the signer to do so. To give allowance, let `lp` call [registerAllowedSigner](https://github.com/celer-network/intent-rfq-contract/blob/4b482dcff6b775002d726a33835a9258378c647a/src/RFQ.sol#L319) of RFQ contract on specific chain.
 
 ### Running
 
