@@ -3,7 +3,7 @@ package proto
 import (
 	"fmt"
 
-	"github.com/celer-network/peti-rfq-mm/sdk/common"
+	"github.com/celer-network/intent-rfq-mm/sdk/common"
 )
 
 type Err struct {

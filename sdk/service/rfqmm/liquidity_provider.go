@@ -8,11 +8,11 @@ import (
 
 	ethutils "github.com/celer-network/goutils/eth"
 	"github.com/celer-network/goutils/log"
-	"github.com/celer-network/peti-rfq-mm/sdk/bindings/interfaces/ierc20"
-	"github.com/celer-network/peti-rfq-mm/sdk/bindings/rfq"
-	"github.com/celer-network/peti-rfq-mm/sdk/common"
-	"github.com/celer-network/peti-rfq-mm/sdk/eth"
-	"github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	"github.com/celer-network/intent-rfq-mm/sdk/bindings/interfaces/ierc20"
+	"github.com/celer-network/intent-rfq-mm/sdk/bindings/rfq"
+	"github.com/celer-network/intent-rfq-mm/sdk/common"
+	"github.com/celer-network/intent-rfq-mm/sdk/eth"
+	"github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )

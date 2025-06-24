@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/celer-network/goutils/log"
-	"github.com/celer-network/peti-rfq-mm/sdk/common"
-	"github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm"
-	mmproto "github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	"github.com/celer-network/intent-rfq-mm/sdk/common"
+	"github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm"
+	mmproto "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	"gopkg.in/resty.v1"
 )
 

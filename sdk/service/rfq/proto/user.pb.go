@@ -9,8 +9,8 @@
 package proto
 
 import (
-	common "github.com/celer-network/peti-rfq-mm/sdk/common"
-	proto "github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	common "github.com/celer-network/intent-rfq-mm/sdk/common"
+	proto "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

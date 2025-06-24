@@ -1,4 +1,4 @@
-module github.com/celer-network/peti-rfq-mm
+module github.com/celer-network/intent-rfq-mm
 
 go 1.18
 

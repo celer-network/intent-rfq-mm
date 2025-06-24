@@ -7,7 +7,7 @@
 package proto
 
 import (
-	common "github.com/celer-network/peti-rfq-mm/sdk/common"
+	common "github.com/celer-network/intent-rfq-mm/sdk/common"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

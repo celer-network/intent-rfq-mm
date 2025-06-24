@@ -1,5 +1,4 @@
-# peti-rfq-mm
-RFQ Market Maker
+# Celer Intent RFQ Market Maker
 
 [MM Doc](./doc/mm.md)
 

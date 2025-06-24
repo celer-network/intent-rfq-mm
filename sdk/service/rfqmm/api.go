@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/celer-network/goutils/log"
-	"github.com/celer-network/peti-rfq-mm/sdk/eth"
-	"github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	"github.com/celer-network/intent-rfq-mm/sdk/eth"
+	"github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 	"google.golang.org/grpc"
 )

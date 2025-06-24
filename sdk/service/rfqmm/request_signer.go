@@ -4,8 +4,8 @@ import (
 	"math/big"
 
 	ethutils "github.com/celer-network/goutils/eth"
-	"github.com/celer-network/peti-rfq-mm/sdk/eth"
-	"github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	"github.com/celer-network/intent-rfq-mm/sdk/eth"
+	"github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 )
 
 type RequestSignerConfig struct {

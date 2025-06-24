@@ -9,7 +9,7 @@
 package proto
 
 import (
-	proto "github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+	proto "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"

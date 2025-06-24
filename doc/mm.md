@@ -179,13 +179,13 @@ the locked token X which was deposited by User would be transferred to MM after 
 Then the swap on chain between User and MM is completed.
 
 ### Relayer
-Relayer is a central service hosted by Peti protocol to help those MMs who:
+Relayer is a central service hosted by Celer Intent protocol to help those MMs who:
 * doesn't want to request rfq server for reporting tokens and getting pending orders
 * doesn't want to send any tx on both of dst and src chain.
 
 As a consequence of that the relayer sends tx for MMs:
 * MM should expose more api in order to finish the whole swap, including an api for signing specific data.
-* Base fees(tx gas cost and message fee) would be charged by Peti protocol instead of MM, and be accumulated in RFQ contract.
+* Base fees(tx gas cost and message fee) would be charged by Celer Intent protocol instead of MM, and be accumulated in RFQ contract.
 
 Relayer's working mechanism is very simple and is based on MM's signature verification. Instead of directly sending tokens
 to User, MM should sign the quote's hash to express that he allows a third party to transfer token from his address to user.
@@ -211,12 +211,12 @@ For customized MM application, run it as you preferred.
 
 ### Installation
 
-1. Download `peti-rfq-mm`
+1. Download `intent-rfq-mm`
 ```
-git clone https://github.com/celer-network/peti-rfq-mm.git
-cd peti-rfq-mm
+git clone https://github.com/celer-network/intent-rfq-mm.git
+cd intent-rfq-mm
 ```
-2. Build `peti-rfq-mm`
+2. Build `intent-rfq-mm`
 ```
 make install
 ```
@@ -224,16 +224,16 @@ make install
 ### Configuration
 Make a new folder to store your configuration file and ETH keystore file.
 ```
-mkdir .peti-rfq-mm
-cd .peti-rfq-mm
+mkdir .intent-rfq-mm
+cd .intent-rfq-mm
 mkdir config eth-ks
 touch config/chain.toml config/lp.toml config/fee.toml config/mm.toml
-// move all used address's keystore file into .peti-rfq-mm/eth-ks/
+// move all used address's keystore file into .intent-rfq-mm/eth-ks/
 mv <path-to-your-eth-keystore-file> eth-ks/<give-a-name>.json
 ```
-The `.peti-rfq-mm` folder's structure will look like:
+The `.intent-rfq-mm` folder's structure will look like:
 ```
-.peti-rfq-mm/
+.intent-rfq-mm/
   - config/
       - chain.toml
       - lp.toml
@@ -308,7 +308,7 @@ decimals = 18
 freezetime = 200
 ```
 You can use different account for each chain or just use one account for all chains. For a local account, fill `keystore` and `passphrase`. `keystore` should be set to path of your
-keystore file relative to `.peti-rfq-mm` floder. For an external account, read the following guide.
+keystore file relative to `.intent-rfq-mm` floder. For an external account, read the following guide.
 >**EXTERNAL ACCOUNT GUIDE.** First of all, this is a feature of light-MM. Since default MM will send tx for itself, a `lp` with hot key is required. (*External accounts as `lp`s with one specific local account for sending txs is possible. Customize your own MM and welcome any PRs*.) To use an external account(e.g. a contract that holds tokens), let `keystore` and `passphrase` be empty and set `address` to the address of the external account. **Most importantly, somehow let this external account call [registerAllowedSigner](https://github.com/celer-network/sgn-v2-contracts/blob/9ce8ffe13389415a53e2c38838da1b99689d40f0/contracts/message/apps/RFQ.sol#L316) of RFQ contract on specific chain with the address of `requestsigner`.**
 
 For each token, `address`, `symbol`, `decimals` and `freezetime` are required, while `amount` and `approve` are optional.
@@ -423,17 +423,17 @@ As mentioned before, MM should be able to sign any data and verify own signature
 
 ### Running
 
-Create a peti-rfq-mm system service
+Create a intent-rfq-mm system service
 ```
-touch /etc/systemd/system/peti-rfq-mm.service
+touch /etc/systemd/system/intent-rfq-mm.service
 # create the log directory for executor
-mkdir -p /var/log/peti-rfq-mm
+mkdir -p /var/log/intent-rfq-mm
 ```
 
 >IMPORTANT: check if the user, user group and paths defined in your systemd file are correct.
 
 ```
-# peti-rfq-mm.service
+# intent-rfq-mm.service
 
 [Unit]
 Description=Default MM application
@@ -441,10 +441,10 @@ After=network-online.target
 
 [Service]
 Environment=HOME=/home/ubuntu
-ExecStart=/home/ubuntu/go/bin/peti-rfq-mm start \
-  --home /home/ubuntu/.peti-rfq-mm/ \
-  --logdir /var/log/peti-rfq-mm/app --loglevel debug
-StandardError=append:/var/log/peti-rfq-mm/error.log
+ExecStart=/home/ubuntu/go/bin/intent-rfq-mm start \
+  --home /home/ubuntu/.intent-rfq-mm/ \
+  --logdir /var/log/intent-rfq-mm/app --loglevel debug
+StandardError=append:/var/log/intent-rfq-mm/error.log
 Restart=always
 RestartSec=10
 User=ubuntu
@@ -456,10 +456,10 @@ WantedBy=multi-user.target
 ```
 Enable and start executor service
 ```
-sudo systemctl enable peti-rfq-mm
-sudo systemctl start peti-rfq-mm
+sudo systemctl enable intent-rfq-mm
+sudo systemctl start intent-rfq-mm
 // Check if logs look ok
-tail -f -n30 /var/log/peti-rfq-mm/app/<log-file-with-start-time>.log
+tail -f -n30 /var/log/intent-rfq-mm/app/<log-file-with-start-time>.log
 ```
 
 ## Light MM application
@@ -468,7 +468,7 @@ The difference between Light MM and Default MM:
 * Light MM will not actively send any request to RFQ server.
 * Light MM will serve more api request. One for signing quote hash, and one for providing supported tokens' info.
 * Light MM will not send any tx on chain by himself. Tx for `dstTransfer` and `srcRelease` will be sent by Relayer.
-* Light MM will not charge tx gas cost and message fee. It will charged by Peti protocol.
+* Light MM will not charge tx gas cost and message fee. It will charged by Celer Intent protocol.
 
 ### Light MM Installation
 

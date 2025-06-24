@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/celer-network/peti-rfq-mm/sdk/eth"
+	"github.com/celer-network/intent-rfq-mm/sdk/eth"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	solsha3 "github.com/miguelmota/go-solidity-sha3"
 )

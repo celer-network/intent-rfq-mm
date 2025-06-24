@@ -5,8 +5,8 @@
 
 ## rfq
 ```
-import "github.com/celer-network/peti-rfq-mm/sdk/service/rfq"
-import rfqproto "github.com/celer-network/peti-rfq-mm/sdk/service/rfq/proto"
+import "github.com/celer-network/intent-rfq-mm/sdk/service/rfq"
+import rfqproto "github.com/celer-network/intent-rfq-mm/sdk/service/rfq/proto"
 ```
 Package rfq provides the client of RFQ Server.
 
@@ -198,8 +198,8 @@ message UpdateConfigsResponse {
 
 ## rfqmm
 ```
-import "github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm"
-import rfqmmproto "github.com/celer-network/peti-rfq-mm/sdk/service/rfqmm/proto"
+import "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm"
+import rfqmmproto "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 ```
 Package rfqmm provides the client and MM application(server) and some default implementation of {ChainQuerier, LiquidityProvider,
 AmountCalculator, RequestSigner}. Those four components are required to create a server of MM application.
