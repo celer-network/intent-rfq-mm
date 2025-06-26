@@ -9,6 +9,7 @@ import (
 
 	"github.com/celer-network/goutils/log"
 	"github.com/celer-network/intent-rfq-mm/sdk/common"
+	"github.com/celer-network/intent-rfq-mm/sdk/eth"
 	"github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm"
 	mmproto "github.com/celer-network/intent-rfq-mm/sdk/service/rfqmm/proto"
 	"gopkg.in/resty.v1"
@@ -50,9 +51,14 @@ func NewExamplePriceProvider(url string, lp rfqmm.LiquidityProvider) *ExamplePri
 func (pp *ExamplePriceProvider) GetPrice(token *common.Token) (float64, error) {
 	pp.mux.RLock()
 	defer pp.mux.RUnlock()
-	tokenSymbol := pp.lp.GetLPTokenSymbol(token.ChainId, token.GetAddr()) // should not trust pass-in token symbol
-	if tokenSymbol == "" {
-		return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("token %s is not a LP token", token.Address))
+	var tokenSymbol string
+	if token.GetAddr() == eth.ZeroAddr {
+		tokenSymbol = token.Symbol // Native, for gas calc
+	} else {
+		tokenSymbol = pp.lp.GetLPTokenSymbol(token.ChainId, token.GetAddr()) // should not trust pass-in token symbol
+		if tokenSymbol == "" {
+			return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("token %s is not a LP token", token.Address))
+		}
 	}
 	if price, ok := pp.priceCache[tokenSymbol]; !ok {
 		return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("no price for token %s", token.Address))
