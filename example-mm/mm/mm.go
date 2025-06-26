@@ -84,7 +84,7 @@ func NewExampleMM() *ExampleMM {
 	}
 	// prepare a Price Provider
 	priceUrl := viper.GetString(PriceProviderUrl)
-	priceProvider := NewExamplePriceProvider(priceUrl)
+	priceProvider := NewExamplePriceProvider(priceUrl, lp)
 	priceProvider.UpdatePrice()
 	ac := rfqmm.NewDefaultAmtCalculator(feeConfig, cm, priceProvider)
 

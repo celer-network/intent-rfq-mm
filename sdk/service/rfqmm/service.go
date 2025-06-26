@@ -145,6 +145,8 @@ type LiquidityProvider interface {
 	DstTransfer(transferNative bool, _quote rfq.RFQQuote, opts ...ethutils.TxOption) (eth.Hash, error)
 	// SrcRelease should send tx on srcChain to release srcToken to mm
 	SrcRelease(_quote rfq.RFQQuote, _execMsgCallData []byte, opts ...ethutils.TxOption) (eth.Hash, error)
+	// Get LP token symbol
+	GetLPTokenSymbol(chainId uint64, tokenAddr eth.Addr) string
 }
 
 type AmountCalculator interface {

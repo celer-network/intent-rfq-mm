@@ -40,6 +40,7 @@ type DefaultLiquidityProvider struct {
 	// supported token swap pair
 	// map key is in form of <srcChainId>-<srcTokenAddr>-<srcTokenDecimal>-<dstChainId>-<dstTokenAddr>-<dstTokenDecimal>
 	tokenPair map[string]bool
+	tokens    map[uint64]map[eth.Addr]string // chid => (token addr => symbol)
 }
 
 // NewDefaultLiquidityProvider creates a new instance of DefaultLiquidityProvider.
@@ -50,6 +51,7 @@ func NewDefaultLiquidityProvider(cm *ChainManager, lm *LiqManager) *DefaultLiqui
 		chainManager: cm,
 		liqManager:   lm,
 		tokenPair:    make(map[string]bool),
+		tokens:       make(map[uint64]map[eth.Addr]string),
 	}
 	// construct transactor for each chain
 	for _, chainId := range lm.GetChains() {
@@ -70,6 +72,13 @@ func NewDefaultLiquidityProvider(cm *ChainManager, lm *LiqManager) *DefaultLiqui
 
 	// approve to rfq contract
 	lp.approveERC20ToRfq()
+
+	for _, token := range lp.GetTokens() {
+		if _, ok := lp.tokens[token.ChainId]; !ok {
+			lp.tokens[token.ChainId] = make(map[eth.Addr]string)
+		}
+		lp.tokens[token.ChainId][token.GetAddr()] = token.Symbol
+	}
 	return lp
 }
 
@@ -602,6 +611,13 @@ func (d *DefaultLiquidityProvider) getTokensByStrList(list []string) []*common.T
 		}
 	}
 	return tokens
+}
+
+func (d *DefaultLiquidityProvider) GetLPTokenSymbol(chainId uint64, tokenAddr eth.Addr) string {
+	if _, ok := d.tokens[chainId]; !ok {
+		return ""
+	}
+	return d.tokens[chainId][tokenAddr]
 }
 
 func genTokenPairKey(srcToken, dstToken *common.Token) string {

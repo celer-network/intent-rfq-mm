@@ -31,25 +31,31 @@ type ExamplePriceProvider struct {
 	updateCtl      chan bool
 	updateDuration time.Duration
 	priceCache     map[string]float64
+	lp             rfqmm.LiquidityProvider
 	mux            sync.RWMutex
 }
 
 var _ rfqmm.PriceProvider = &ExamplePriceProvider{}
 
-func NewExamplePriceProvider(url string) *ExamplePriceProvider {
+func NewExamplePriceProvider(url string, lp rfqmm.LiquidityProvider) *ExamplePriceProvider {
 	return &ExamplePriceProvider{
 		priceUrl:       url,
 		updateCtl:      make(chan bool),
 		updateDuration: 30 * time.Minute,
 		priceCache:     make(map[string]float64),
+		lp:             lp,
 	}
 }
 
 func (pp *ExamplePriceProvider) GetPrice(token *common.Token) (float64, error) {
 	pp.mux.RLock()
 	defer pp.mux.RUnlock()
-	if price, ok := pp.priceCache[token.Symbol]; !ok {
-		return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("no price for token %s", token.Symbol))
+	tokenSymbol := pp.lp.GetLPTokenSymbol(token.ChainId, token.GetAddr()) // should not trust pass-in token symbol
+	if tokenSymbol == "" {
+		return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("token %s is not a LP token", token.Address))
+	}
+	if price, ok := pp.priceCache[tokenSymbol]; !ok {
+		return 0, mmproto.NewErr(mmproto.ErrCode_ERROR_PRICE_PROVIDER, fmt.Sprintf("no price for token %s", token.Address))
 	} else {
 		return price, nil
 	}

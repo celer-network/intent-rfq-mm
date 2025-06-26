@@ -337,6 +337,9 @@ func (c Chain) VerifyRfqEvent(tx, evID eth.Hash, evName string) (bool, error) {
 	}
 	// make sure event isn't too recent
 	blk, err := c.Client.BlockNumber(context.Background())
+	if err != nil {
+		return false, proto.NewErr(proto.ErrCode_ERROR_CHAIN_MANAGER, fmt.Sprintf("get BlockNumber err:%s", err))
+	}
 	if expectedLog.BlockNumber > blk-c.BlockDelay {
 		return false, proto.NewErr(proto.ErrCode_ERROR_CHAIN_MANAGER, fmt.Sprintf("Event block %d too soon, should only up to block %d", expectedLog.BlockNumber, blk-c.BlockDelay))
 	}
@@ -361,7 +364,7 @@ func newDataCache(initData []byte, validPeriod time.Duration, updateFunc func() 
 }
 
 func (c *dataCache) get() []byte {
-	if time.Now().Sub(c.updateTime) > c.validPeriod {
+	if time.Since(c.updateTime) > c.validPeriod {
 		data, err := c.updateFunc()
 		if err != nil {
 			log.Warnf("failed to update cache, err:%v", err)
